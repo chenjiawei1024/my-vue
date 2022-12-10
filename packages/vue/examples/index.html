@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+</body>
+<script src="../../reactivity/dist/reactivity.global.js"></script>
+<script>
+  let {reactive, readonly, shallowReactive, shallowReadonly} = build;
+  let state = reactive({name: 'reactive'});
+  let state2 = readonly({name: 'readonly'});
+  let state3 = shallowReactive({name: 'shallowReactive', aa: {a: 'list'}});
+  let state4 = shallowReadonly({name: 'shallowReadonly', aaa: {aaa: 'list2'}});
+  console.log(state);
+  console.log(state2);
+  console.log(state3);
+  console.log(state4);
+  console.log(state3.aa);
+  console.log(state4.aaa);
+  state2.name =  '1111'
+  state4.name = '222222'
+</script>
+</html>

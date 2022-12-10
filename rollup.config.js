@@ -5,13 +5,12 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import ts from 'rollup-plugin-typescript2';
 import json from '@rollup/plugin-json';
-import resolvePlugin from '@rollup/plugin-node-resolve';
+import resolvePlugin from '@rollup/plugin-node-resolve'; // 用于解析三方外部依赖
 
 // 获取等同于commonjs的__dirname
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // 确定env环境 若无直接终止
-console.log(process.env);
 console.log('================================');
 console.log(process.env.TARGET);
 if (!process.env.TARGET) {
@@ -23,8 +22,8 @@ const packagesDir = path.resolve(__dirname, 'packages');
 const packageDir = path.resolve(packagesDir, process.env.TARGET);
 // 获取打包的项目配置
 const resolve = (p) => path.resolve(packageDir, p);
-const pkg = require(resolve(`package.json`));
-const packageOptions = pkg.buildOptions || {};
+// const pkg = require(resolve(`package.json`));
+const packageOptions = { format: ['esm-bundler', 'cjs'] };
 // 获取被打包的包名
 const name = path.basename(packageDir);
 
@@ -63,7 +62,7 @@ const outputOptions = {
 
 // 创建配置项
 const createConfig = (format, output) => {
-  output.name = packageOptions.name;
+  output.name = 'build';
   output.sourcemap = true;
 
   return {
@@ -79,7 +78,7 @@ const createConfig = (format, output) => {
   };
 };
 // 默认输出格式
-const defaultFormats = ['esm-bundler', 'cjs'];
+const defaultFormats = ['esm-bundler', 'cjs', 'global'];
 packageOptions.formats = packageOptions.formats || defaultFormats;
 
 export default packageOptions.formats.map((format) =>

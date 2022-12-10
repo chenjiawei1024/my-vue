@@ -1,32 +1,58 @@
-// const reactiveHandler = {};
-// const shallowReactiveHandler = {};
-// const readonlyHandler = {};
-// const shallowReadonlyHandler = {};
+import { isObject } from "@vue/shared";
+import {
+  reactiveHandler,
+  shallowReactiveHandler,
+  readonlyHandler,
+  shallowReadonlyHandler,
+} from "./baseHandlers"
 
-// function reactive(target) {
-//   return createReactiveObject(target, false, reactiveHandler);
-// }
+// key是对象，且需要自动垃圾回收,WeakMap满足需求
+export const reactiveMap = new WeakMap<object, any>()
+export const shallowReactiveMap = new WeakMap<object, any>()
+export const readonlyMap = new WeakMap<object, any>()
+export const shallowReadonlyMap = new WeakMap<object, any>()
 
-// function shallowReactive(target) {
-//   return createReactiveObject(target, false, shallowReactiveHandler);
-// }
+function reactive(target: any) {
+  return createReactiveObject(target, false, reactiveHandler, reactiveMap);
+}
 
-// function readonly(target) {
-//   return createReactiveObject(target, true, readonlyHandler);
-// }
+function shallowReactive(target: any) {
+  return createReactiveObject(target, false, shallowReactiveHandler, shallowReactiveMap);
+}
 
-// function shallowReadonly(target) {
-//   return createReactiveObject(target, true, shallowReadonlyHandler);
-// }
+function readonly(target: any) {
+  return createReactiveObject(target, true, readonlyHandler, readonlyMap);
+}
 
-// // 创建代理对象（根据不同参数）
-// function createReactiveObject(target, isReadonly, baseHandlers) {
+function shallowReadonly(target: any) {
+  return createReactiveObject(target, true, shallowReadonlyHandler, shallowReadonlyMap);
+}
 
-// }
+// 创建代理对象（根据不同参数）
+function createReactiveObject(
+  target: object,
+  isReadonly: boolean,
+  baseHandlers: ProxyHandler<object>,
+  proxyMap: WeakMap<object, any>,
+  ) {
+  // 非对象直接返回
+  if(!isObject(target)) {
+    return target;
+  }
+  // 已代理对象直接返回
+  const existingProxy = proxyMap.get(target)
+  if (existingProxy) {
+    return existingProxy
+  }
 
-// export {
-//   reactive,
-//   shallowReactive,
-//   readonly,
-//   shallowReadonly,
-// }
+  const proxy = new Proxy(target, baseHandlers);
+  proxyMap.set(target, proxy);
+  return proxy;
+}
+
+export {
+  reactive,
+  shallowReactive,
+  readonly,
+  shallowReadonly,
+}
