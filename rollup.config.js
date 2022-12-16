@@ -1,7 +1,7 @@
 // @ts-check
 // 引入依赖
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname } from 'path';
 import ts from 'rollup-plugin-typescript2';
 import json from '@rollup/plugin-json';
@@ -11,8 +11,6 @@ import resolvePlugin from '@rollup/plugin-node-resolve'; // 用于解析三方�
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // 确定env环境 若无直接终止
-console.log('================================');
-console.log(process.env.TARGET);
 if (!process.env.TARGET) {
   throw new Error('TARGET package must be specified via --environment flag.');
 }
@@ -22,8 +20,14 @@ const packagesDir = path.resolve(__dirname, 'packages');
 const packageDir = path.resolve(packagesDir, process.env.TARGET);
 // 获取打包的项目配置
 const resolve = (p) => path.resolve(packageDir, p);
-// const pkg = require(resolve(`package.json`));
-const packageOptions = { format: ['esm-bundler', 'cjs'] };
+console.log(resolve('src/index.ts'));
+const { default: pkg } = await import(
+  pathToFileURL(resolve(`package.json`)).href,
+  {
+    assert: { type: 'json' },
+  }
+);
+const packageOptions = pkg.buildOptions;
 // 获取被打包的包名
 const name = path.basename(packageDir);
 
@@ -78,9 +82,16 @@ const createConfig = (format, output) => {
   };
 };
 // 默认输出格式
-const defaultFormats = ['esm-bundler', 'cjs', 'global'];
+const defaultFormats = ['esm-bundler', 'cjs'];
 packageOptions.formats = packageOptions.formats || defaultFormats;
 
 export default packageOptions.formats.map((format) =>
   createConfig(format, outputOptions[format])
 );
+
+/**
+ * 需要注意几个点
+ * 1. esModule规范中不存在__dirname, 因此需要使用const __dirname = dirname(fileURLToPath(import.meta.url));来获取相同效果
+ * 2. import json文件时，需要添加 assert: { type: 'json' },使node能够识别json格式
+ * 3. Windows系统使用绝对路径import时,需要把格式转化为file格式,较为特殊，需要注意。具体见https://github.com/nodejs/node/issues/31710
+ */
